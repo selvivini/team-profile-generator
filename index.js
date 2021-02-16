@@ -1,104 +1,95 @@
-const inquirer= require("inquirer");
-const fs= require("fs");
-const path = require("path");
-const employee = require("./lib/Employee");
-const engineer = require("./lib/Engineer");
-const manager = require("./lib/Manager");
-const intern = require('./lib/Intern');
-const render = require("./lib/renderHtml");
+const Manager = require('./lib/Manager');
+const Engineer = require('./lib/Engineer');
+const Intern = require('./lib/Intern');
+const inquirer = require('inquirer');
+const path = require('path');
+const fs = require('fs');
+const util = require('util');
 
-const dist_dir = path.resolve(__dirname, "dist")
-const distPath = path.join(dist_dir, "team.html")
-const output=[];
+const mkdirAsync = util.promisify(fs.mkdir);
+const writeFileAsync = util.promisify(fs.writeFile);
+
+const DIST_DIR = path.resolve(__dirname, 'dist');
+const outputPath = path.join(DIST_DIR, 'team.html');
+
+const render = require('./lib/renderHtml');
+const Employee = require('./lib/Employee');
+
+// Write code to use inquirer to gather information about the development team members,
+// and to create objects for each team member (using the correct classes as blueprints!)
 const questions = [
-  
-{
-    type: "input",
-    name: "employeeName",
-    message: "what is the Employee's name"
-},
-{
-    type: "input",
-    name : "id",
-    message: "what is employee's id",
+	{ name: 'name', message: "What's the employee's name" },
+	{ name: 'id', message: "What's the employee's id" },
+	{ name: 'email', message: "What's the employee's email" },
+	{
+		type: 'list',
+		name: 'role',
+		message: "What's the employee's role",
+		choices: [ 'Manager', 'Engineer', 'Intern' ]
+	}
+];
 
-},
-{
-    type: "input",
-    name: "email",
-    message: "what is employee's email?"
-}, 
-{type: "list",
-  name: "role",
-  message: "what is the employee'role?",
-  choices: ["manager", "engineer", "intern"]
-},
-{
-    type: "input",
-    name: "officeNo",
-    message: "what is the employee's officeNo?",
-    when: function(answers){
-        return answers.role === "manager"
-    },
+const questionForManager = [ { name: 'officeNumber', message: "What's the manager's office number" } ];
 
-},
-{
-    type: "input",
-    name: "github",
-    message: "what is your github username?",
-    when: function(answers){
-     return answers.role === "engineer"
-    }
-},
-{
-    type: "input",
-    name: "school",
-    message: "what is your school name?",
-    when : function(answers){
- return answers.role === "intern"
-    }
-},
-{
-    type:"confirm",
-    name: "addEmployee",
-    message: "would you like to add another employee?"
-},
+const questionForEngineer = [ { name: 'github', message: "What's the Engineer's github" } ];
 
-]
+const questionForIntern = [ { name: 'school', message: "What's the Intern's school" } ];
 
+const confirm = [
+	{
+		type: 'confirm',
+		name: 'adding',
+		message: 'Do you want to input more employee information'
+	}
+];
 
+const init = async () => {
+	const employees = [];
+	let addMore = true;
 
-function promptUser(){
-    inquirer.prompt(questions).then((answers)=>{
-        output.push(answers)
-        if(answers.addEmployee){
-            promptUser()
-        } else{
-            // console.log(render(output));
-           const team = output.map(emp=>{
-                switch(emp){
-                 case "Manager":
-                return new manager( emp.name, emp.id, emp.email, emp.officeNo)
-                case "Engineer":
-                return new engineer(emp.name, emp.id, emp.email, emp.github)
-                case "Intern":
-                return new intern(emp.name, emp.id, emp.email, emp.school)
-                
-                }
-            });
-            
-          fs.writeFile(distPath, render(team), err=>{
-              if(err)
-              {throw err}else{
-                  console.log("Success!")
-              }
-        
-        })
-            
-        }
-    }).catch(err => {if(err){console.log("Error: ", err)}})
-   
-}
+	while (addMore) {
+		//destructure name, id , email, role from answer object
+		const { name, id, email, role } = await inquirer.prompt(questions);
 
+		if (role === 'Manager') {
+			const { officeNumber } = await inquirer.prompt(questionForManager);
 
-promptUser()
+			// create a new Manager object and push to employees array
+			employees.push(new Manager(name, id, email, officeNumber));
+		} else if (role === 'Engineer') {
+			const { github } = await inquirer.prompt(questionForEngineer);
+
+			// create a new Engineer object and push to employees array
+			employees.push(new Engineer(name, id, email, github));
+		} else {
+			const { school } = await inquirer.prompt(questionForIntern);
+
+			// create a new Engineer object and push to employees array
+			employees.push(new Intern(name, id, email, school));
+		}
+
+		// check if the user wanna input more employee's information
+		const { adding } = await inquirer.prompt(confirm);
+
+		addMore = adding;
+	}
+
+	// After the user has input all employees desired, call the `render` function (required
+	// above) and pass in an array containing all employee objects; the `render` function will
+	// generate and return a block of HTML including templated divs for each employee!
+	const html = render(employees);
+
+	// After you have your html, you're now ready to create an HTML file using the HTML
+	// returned from the `render` function. Now write it to a file named `team.html` in the
+	// `output` folder. You can use the variable `outputPath` above target this location.
+
+	if (!fs.existsSync(outputPath)) {
+		const error = await mkdirAsync(DIST_DIR);
+		error && console.error(error);
+	}
+
+	const error = await writeFileAsync(outputPath, html);
+	error && console.error(error);
+};
+
+init();
