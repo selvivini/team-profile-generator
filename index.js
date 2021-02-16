@@ -89,7 +89,8 @@ const init = async () => {
 	}
 
 	const error = await writeFileAsync(outputPath, html);
-	error && console.error(error);
+	error && console.error(error) ||console.log("Success!");
+	
 };
 
 init();
