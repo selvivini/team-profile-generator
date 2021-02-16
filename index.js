@@ -66,13 +66,15 @@ const questions = [
 
 ]
 
+
+
 function promptUser(){
     inquirer.prompt(questions).then((answers)=>{
         output.push(answers)
         if(answers.addEmployee){
             promptUser()
         } else{
-            console.log(output);
+            // console.log(render(output));
            const team = output.map(emp=>{
                 switch(emp){
                  case "Manager":
@@ -84,14 +86,17 @@ function promptUser(){
                 
                 }
             });
-            fs.writeFile(distPath, render(team),err=>{
-            if (err){
-                console.log(err)
-            } 
-            console.log("Success!")
-            })
+            
+          fs.writeFile(distPath, render(team), err=>{
+              if(err)
+              {throw err}else{
+                  console.log("Success!")
+              }
+        
+        })
+            
         }
-    }).catch(err =>console.log("Error: " ,err))
+    }).catch(err => {if(err){console.log("Error: ", err)}})
    
 }
 
