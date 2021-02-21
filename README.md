@@ -29,3 +29,27 @@ THEN I am prompted to enter the intern’s name, ID, email, and school, and I am
 WHEN I decide to finish building my team
 THEN I exit the application, and the HTML is generated
 ```
+## Technologies used
+* NODEjs
+* Jest for unit testing
+* Javscript
+* Inquirer npm package
+* es6 classes
+* es6 Object destructuring
+* Node js fs module
+
+
+## How the app works
+The user can create the profile of the employees based on their role from the command line interface.
+The user will be asked a series of questions based on which the team profile is created in a html page.
+To make the app working you have to run node index.js, following which the prompts show up. As a part of
+test driven developement have done unit testing using jest module. The test cases were written for each class
+with some test cases for each used case scenario. All the test suites gets passed.
+
+## Video link
+[team-profile-generator](https://drive.google.com/file/d/1d9kVgbCbM0EHj6ILSWMpSFC8icNPTP9C/view)
+
+## Mockup
+![prompts](Assets/mockup-1.PNG)
+![htmlPage](Assets/mockup-2.PNG)
+
